@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.wgd.community.mapper.DiscussPostMapper">
+    <resultMap id="BaseResultMap" type="org.wgd.community.model.pojo.DiscussPost">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="comment_count" property="commentCount" jdbcType="INTEGER"/>
+        <result column="score" property="score" jdbcType="DOUBLE"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+    </resultMap>
+    <sql id="selectFields">
+        id
+        , user_id, title, content, type, status, create_time, comment_count, score
+    </sql>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from discuss_post
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="org.wgd.community.model.pojo.DiscussPost" keyProperty="id">
+        insert into discuss_post (user_id, title,
+                                  type, status, create_time,
+                                  comment_count, score, content)
+        values (#{userId,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR},
+                #{type,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP},
+                #{commentCount,jdbcType=INTEGER}, #{score,jdbcType=DOUBLE}, #{content,jdbcType=LONGVARCHAR})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="org.wgd.community.model.pojo.DiscussPost">
+        update discuss_post
+        set user_id       = #{userId,jdbcType=INTEGER},
+            title         = #{title,jdbcType=VARCHAR},
+            type          = #{type,jdbcType=INTEGER},
+            status        = #{status,jdbcType=INTEGER},
+            create_time   = #{createTime,jdbcType=TIMESTAMP},
+            comment_count = #{commentCount,jdbcType=INTEGER},
+            score         = #{score,jdbcType=DOUBLE},
+            content       = #{content,jdbcType=LONGVARCHAR}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        select id,
+               user_id,
+               title,
+               type,
+               status,
+               create_time,
+               comment_count,
+               score,
+               content
+        from discuss_post
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select id,
+               user_id,
+               title,
+               type,
+               status,
+               create_time,
+               comment_count,
+               score,
+               content
+        from discuss_post
+    </select>
+
+    <select id="pageList" resultType="org.wgd.community.model.pojo.DiscussPost">
+        select id, user_id, title, type, status, create_time, comment_count, score, content
+        from discuss_post
+        where status != 2
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
+        <if test="orderMode==0">
+            order by type desc, create_time desc
+        </if>
+        <if test="orderMode==1">
+            order by type desc, score desc, create_time desc
+        </if>
+        limit #{pageNo},#{pageSize}
+    </select>
+
+    <select id="count" resultType="java.lang.Integer">
+        select count(id)
+        from discuss_post
+        where status != 2
+        <if test="userId != null and userId != 0">
+            and user_id = #{userId}
+        </if>
+    </select>
+    <update id="updateCommentCount">
+        update discuss_post
+        set comment_count = #{commentCount}
+        where id = #{id}
+    </update>
+    <update id="updateType">
+        update discuss_post
+        set type = #{type}
+        where id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        update discuss_post
+        set status = #{status}
+        where id = #{id}
+    </update>
+
+    <update id="updateScore">
+        update discuss_post
+        set score = #{score}
+        where id = #{id}
+    </update>
+
+    <select id="selectDiscussPostsByPage" resultType="org.wgd.community.model.pojo.DiscussPost">
+        select
+        <include refid="selectFields">
+        </include>
+        from discuss_post
+        where status!=2
+        <if test="userId!=0">
+            and user_id = #{userId}
+        </if>
+        <if test="orderMode==0">
+            order by type desc,create_time desc
+        </if>
+        <if test="orderMode==1">
+            order by type desc,score desc,create_time desc
+        </if>
+
+        limit #{offset},#{limit}
+
+    </select>
+
+    <select id="selectDiscussPostCount" resultType="int">
+        select count(id)
+        from discuss_post
+        where status!=2
+        <if test="userId!=0">
+            and user_id = #{userId}
+        </if>
+    </select>
+</mapper>

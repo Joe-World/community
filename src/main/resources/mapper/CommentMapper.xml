@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.wgd.community.mapper.CommentMapper">
+    <sql id="selectFields">
+        id
+        , user_id, entity_type, entity_id, target_id, content, status, create_time
+    </sql>
+    <sql id="fieldsMap" >
+        c.id,c.user_id,entity_type,entity_id,target_id,c.content,c.status,c.create_time
+    </sql>
+    <sql id="insertFields">
+        user_id
+        , entity_type, entity_id, target_id, content, status, create_time
+    </sql>
+    <resultMap id="BaseResultMap" type="org.wgd.community.model.pojo.Comment">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="entity_type" property="entityType" jdbcType="INTEGER"/>
+        <result column="entity_id" property="entityId" jdbcType="INTEGER"/>
+        <result column="target_id" property="targetId" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from comment
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="org.wgd.community.model.pojo.Comment">
+        insert into comment (id, user_id, entity_type,
+                             entity_id, target_id, status,
+                             create_time, content)
+        values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{entityType,jdbcType=INTEGER},
+                #{entityId,jdbcType=INTEGER}, #{targetId,jdbcType=INTEGER}, #{status,jdbcType=INTEGER},
+                #{createTime,jdbcType=TIMESTAMP}, #{content,jdbcType=LONGVARCHAR})
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="org.wgd.community.model.pojo.Comment">
+        update comment
+        set user_id     = #{userId,jdbcType=INTEGER},
+            entity_type = #{entityType,jdbcType=INTEGER},
+            entity_id   = #{entityId,jdbcType=INTEGER},
+            target_id   = #{targetId,jdbcType=INTEGER},
+            status      = #{status,jdbcType=INTEGER},
+            create_time = #{createTime,jdbcType=TIMESTAMP},
+            content     = #{content,jdbcType=LONGVARCHAR}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        select id,
+               user_id,
+               entity_type,
+               entity_id,
+               target_id,
+               status,
+               create_time,
+               content
+        from comment
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select id,
+               user_id,
+               entity_type,
+               entity_id,
+               target_id,
+               status,
+               create_time,
+               content
+        from comment
+    </select>
+    <select id="selectByEntityTypeAndEntityId" resultType="org.wgd.community.model.pojo.Comment">
+        select
+        <include refid="selectFields"></include>
+        from comment
+        where status = 0
+        and entity_type = #{entityType}
+        and entity_id = #{entityId}
+        order by create_time desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="countByEntityTypeAndEntityId" resultType="int">
+        select count(id)
+        from comment
+        where status = 0
+          and entity_type = #{entityType}
+          and entity_id = #{entityId}
+    </select>
+
+    <select id="selectCountByEntity" resultType="int">
+        select count(id)
+        from comment
+        where status = 0
+          and entity_type = #{entityType}
+          and entity_id = #{entityId}
+    </select>
+
+    <select id="selectDiscussPostCommentByUserId" resultType="org.wgd.community.model.pojo.ReplyInfo">
+        select <include refid="fieldsMap"/>,d.title
+        from community.`comment` c
+        INNER JOIN community.discuss_post d
+        on c.entity_id=d.id
+        where c.user_id=#{userId}
+        order by create_time desc
+        limit #{offset},#{limit}
+    </select>
+
+    <select id="selectDiscussPostCommentCount" resultType="java.lang.Integer">
+        select count(c.id)
+        from community.`comment` c
+                 INNER JOIN community.discuss_post d
+                            on c.entity_id=d.id
+        where c.user_id=#{userId}
+    </select>
+
+    <insert id="insertComment" parameterType="org.wgd.community.model.pojo.Comment">
+        insert into comment(<include refid="insertFields"></include>)
+        values(#{userId},#{entityType},#{entityId},#{targetId},#{content},#{status},#{createTime})
+    </insert>
+</mapper>

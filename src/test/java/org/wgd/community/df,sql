@@ -1,0 +1,121 @@
+create tablespace empspace
+    datafile 'D:\Oracletest\emp01' size 20M
+    autoextend on next 10M maxsize 50M;
+
+CREATE USER staff IDENTIFIED BY staff123
+    DEFAULT TABLESPACE empspace
+    QUOTA UNLIMITED ON empspace;
+GRANT CONNECT, RESOURCE, EXP_FULL_DATABASE TO staff;
+
+
+
+
+-- 创建部departments)
+CREATE TABLE departments (
+    dept_id VARCHAR2(5) PRIMARY KEY,
+    dept_name VARCHAR2(50) NOT NULL,
+    loc_address VARCHAR2(50),
+    loc_city VARCHAR2(30)
+);
+
+-- 创建职位表 (jobs)
+CREATE TABLE jobs (
+    job_id VARCHAR2(5) PRIMARY KEY,
+    job_name VARCHAR2(30) NOT NULL,
+    min_salary NUMBER(6),
+    max_salary NUMBER(6)
+);
+
+-- 创建员工表 (employees)
+CREATE TABLE employees (
+    emp_id VARCHAR2(10) PRIMARY KEY,
+    emp_name VARCHAR2(20) NOT NULL,
+    tel_mobile VARCHAR2(20) NOT NULL UNIQUE,
+    job_id VARCHAR2(5) REFERENCES jobs(job_id),
+    hire_date DATE,
+    base_salary NUMBER(8,2) CHECK (base_salary > 0),
+    mon_comm NUMBER(6,2)
+);
+
+-- 创建任职期限表 (jobhistorys)
+CREATE TABLE jobhistorys (
+    emp_id VARCHAR2(10) REFERENCES employees(emp_id) NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    job_id VARCHAR2(5) REFERENCES jobs(job_id),
+    dept_id VARCHAR2(5) REFERENCES departments(dept_id)
+);
+-- 插入部门数据
+INSERT INTO departments (dept_id, dept_name, loc_address, loc_city)
+VALUES ('D001', '销售部', '123 Main St', 'New York');
+INSERT INTO departments (dept_id, dept_name, loc_address, loc_city)
+VALUES ('D002', '技术部', '1263 Main St', 'New York');
+
+-- 插入职位数据
+INSERT INTO jobs (job_id, job_name, min_salary, max_salary)
+VALUES ('J001', '销售经理', 50000, 80000);
+INSERT INTO jobs (job_id, job_name, min_salary, max_salary)
+VALUES ('J002', '副销售经理', 40000, 80000);
+INSERT INTO jobs (job_id, job_name, min_salary, max_salary)
+VALUES ('J003', '技术经理', 70000, 80000);
+INSERT INTO jobs (job_id, job_name, min_salary, max_salary)
+VALUES ('J004', '副技术经理', 60000, 90000);
+-- 插入员工数据
+INSERT INTO employees (emp_id, emp_name, tel_mobile, job_id, hire_date, base_salary, mon_comm)
+VALUES ('E001', '张三', '123-456-7890', 'J001', TO_DATE('2023-01-15', 'YYYY-MM-DD'), 60000, 5000);
+INSERT INTO employees (emp_id, emp_name, tel_mobile, job_id, hire_date, base_salary, mon_comm)
+VALUES ('E002', '李四', '123-444-7890', 'J002', TO_DATE('2003-01-15', 'YYYY-MM-DD'), 62000, 5700);
+INSERT INTO employees (emp_id, emp_name, tel_mobile, job_id, hire_date, base_salary, mon_comm)
+VALUES ('E003', '张二', '123-044-7890', 'J003', TO_DATE('2002-01-15', 'YYYY-MM-DD'), 69000, 7700);
+INSERT INTO employees (emp_id, emp_name, tel_mobile, job_id, hire_date, base_salary, mon_comm)
+VALUES ('E004', '李二', '166-044-7890', 'J004', TO_DATE('2004-01-15', 'YYYY-MM-DD'), 69900, 7900);
+-- 插入任职期限数据
+INSERT INTO jobhistorys (emp_id, start_date, end_date, job_id, dept_id)
+VALUES ('E001', TO_DATE('2023-01-15', 'YYYY-MM-DD'), TO_DATE('2023-12-31', 'YYYY-MM-DD'), 'J001', 'D001');
+INSERT INTO jobhistorys (emp_id, start_date, end_date, job_id, dept_id)
+VALUES ('E002', TO_DATE('2003-01-15', 'YYYY-MM-DD'), TO_DATE('2005-12-31', 'YYYY-MM-DD'), 'J002', 'D001');
+INSERT INTO jobhistorys (emp_id, start_date, end_date, job_id, dept_id)
+VALUES ('E003', TO_DATE('2002-01-15', 'YYYY-MM-DD'), TO_DATE('2005-12-31', 'YYYY-MM-DD'), 'J003', 'D002');
+INSERT INTO jobhistorys (emp_id, start_date, end_date, job_id, dept_id)
+VALUES ('E004', TO_DATE('2004-01-15', 'YYYY-MM-DD'), TO_DATE('2005-12-31', 'YYYY-MM-DD'), 'J004', 'D002');
+
+
+
+
+
+
+
+SELECT jh.dept_id,
+    d.dept_name,
+    COUNT(DISTINCT jh.emp_id) AS employee_count
+FROM
+    jobhistorys jh
+INNER JOIN
+    departments d
+ON
+    jh.dept_id = d.dept_id
+WHERE
+    jh.start_date <= TO_DATE('2005-12-31', 'YYYY-MM-DD')
+    AND (jh.end_date >= TO_DATE('2001-01-01', 'YYYY-MM-DD') OR jh.end_date IS NULL)
+GROUP BY
+    jh.dept_id, d.dept_name
+ORDER BY
+    jh.dept_id;
+
+
+
+
+
+
+DELETE FROM employees CASCADE
+WHERE emp_id IN (
+    SELECT emp_id
+    FROM jobhistorys
+    WHERE end_date IS NULL OR end_date > TO_DATE('2005-12-31', 'YYYY-MM-DD')
+) ;
+
+
+
+
+
+
