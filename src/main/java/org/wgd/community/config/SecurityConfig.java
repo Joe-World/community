@@ -75,7 +75,7 @@ public class SecurityConfig extends BaseInfoProperties {
                         AUTHORIZATION_ADMIN
                 )
                 .antMatchers(
-                        "/discuss/delete",
+//                        "/discuss/delete",
                         "/data/**"
                 )
                 .hasAnyAuthority(
